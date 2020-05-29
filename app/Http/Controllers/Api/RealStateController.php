@@ -19,9 +19,10 @@ class RealStateController extends Controller
    
     public function index()
     {
-        $realState = $this->realState->paginate(10);
 
-        return response()->json($realState, 200); // retorna JSON e codigo 200
+        $realStates = auth('api')->user()->realState();
+
+        return response()->json($realStates->paginate(10), 200); // retorna JSON e codigo 200
     }
 
    
@@ -33,6 +34,7 @@ class RealStateController extends Controller
         
         try{
 
+            $data['user_id'] = auth('api')->user()->id;
             $realState = $this->realState->create($data);
 
             if(isset($data['categories']) && count($data['categories'])){
@@ -71,7 +73,7 @@ class RealStateController extends Controller
     {
         try{
 
-            $realState = $this->realState->findOrFail($id);
+            $realState = auth('api')->user()->realState()->with('photos')->findOrFail($id); 
 
             return response()->json([
                 'data' => $realState
@@ -92,7 +94,7 @@ class RealStateController extends Controller
 
         try{
 
-            $realState = $this->realState->findOrFail($id);
+            $realState = auth('api')->user()->realState()->findOrFail($id);
             $realState->update($data);
 
             if(isset($data['categories']) && count($data['categories'])){
@@ -119,7 +121,7 @@ class RealStateController extends Controller
 
         }catch(\Expection $e){
             
-            $message = new ApiMessage($e->getMessage());
+            $message = new ApiMessages($e->getMessage());
             return response()->json([$message->getMessage()],401);
         }
     }
@@ -135,7 +137,7 @@ class RealStateController extends Controller
 
         try{
 
-            $realState = $this->realState->findOrFail($id);
+            $realState = auth('api')->user()->realState()->findOrFail($id);
             $realState->delete();
 
             return response()->json([
