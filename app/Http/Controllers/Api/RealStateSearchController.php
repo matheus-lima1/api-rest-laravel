@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\RealState;
+use App\Api\ApiMessages;
 use App\Repository\RealStateRepository;
 
 class RealStateSearchController extends Controller
@@ -17,7 +18,9 @@ class RealStateSearchController extends Controller
 
     public function index(Request $request)
     {
-        //$realState = $this->realState->paginate(10);
+
+        
+        
 
         $repository = new RealStateRepository($this->realState);
 
@@ -27,7 +30,9 @@ class RealStateSearchController extends Controller
 
 	    if($request->has('fields')) {
 		    $repository->selectFilter($request->get('fields'));
-	    }
+        }
+        
+        $repository->setLocation($request->all(['state','city']));
 
         return response()->json([
             'data' => $repository->getResult()->paginate(10)
@@ -36,7 +41,20 @@ class RealStateSearchController extends Controller
 
     public function show($id)
     {
-        //
+        try{
+
+            $realState = $this->realState->with('address')->with('photos')->findOrFail($id);
+
+            return response()->json([
+                'data' => $realState
+            ],200);
+
+        } catch(\Exception $e){
+
+            $message = new ApiMessage($e->getMessage());
+            return response()->json([$message->getMessage()],401);
+
+        }
     }
 
 }
